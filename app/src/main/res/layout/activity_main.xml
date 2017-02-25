@@ -11,8 +11,8 @@
     tools:context="com.fluidcoding.brian.walkaboutit.MainActivity">
 
     <TextView
-        android:text="@string/app_title"
-        android:layout_width="wrap_content"
+        android:text="@string/title_activity_main"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/appTitle" />
 
@@ -21,14 +21,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/app_new_user_msg"
-            android:textSize="16sp"
-            android:checked="true"
-            android:layout_marginBottom="14dp"
-            android:id="@+id/checkNewUser" />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,6 +48,16 @@
             android:hint="Repeat Password"
             android:gravity="center_vertical|center_horizontal"
             android:visibility="gone"/>
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_new_user_msg"
+            android:textSize="16sp"
+            android:checked="false"
+            android:layout_marginBottom="14dp"
+            android:id="@+id/checkNewUser" />
+
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="match_parent"

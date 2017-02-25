@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">WalkAboutIt</string>
-    <string name="app_title">Walk About It!</string>
+    <string name="title_activity_main">Walk About It!</string>
     <string name="app_login">Login</string>
     <string name="app_register">Register</string>
     <string name="app_new_user_msg">Create an Account</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_map">MapActivity</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_map_container">MapContainerActivity</string>
 </resources>
