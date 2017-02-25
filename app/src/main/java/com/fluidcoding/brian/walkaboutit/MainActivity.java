@@ -1,5 +1,6 @@
 package com.fluidcoding.brian.walkaboutit;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,18 +21,22 @@ public class MainActivity extends AppCompatActivity {
     private EditText txtPass;       // Password Input
     private EditText txtEmail;      // Email Input
     private String uName;   // Username for cache
+    Intent mapAct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Saved Data
         loginAuth = getSharedPreferences("auth", 0);
         uName=loginAuth.getString("uName","nologin");
 
+        // Intents
+        mapAct = new Intent(this, MapActivity.class);
+
         initFireBase();
         initUI();
-
     }
 
     public void initUI(){
@@ -45,6 +50,13 @@ public class MainActivity extends AppCompatActivity {
         btnSubmit = (Button)findViewById(R.id.btnLogin);
         // Remember username by default
         if(!uName.equals("nologin"))    txtEmail.setText(uName);
+
+        btnSubmit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(mapAct);
+            }
+        });
     }
 
     /**

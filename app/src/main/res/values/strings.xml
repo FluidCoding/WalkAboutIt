@@ -5,4 +5,6 @@
     <string name="app_register">Register</string>
     <string name="app_new_user_msg">Are you a new User?</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_map">MapActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>
