@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "129588440333-g71f7d0sgto64rmdl35o8h3b5lf5vhq3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fluidcoding.brian.walkaboutit",
+            "certificate_hash": "bcfc18da8ce65bf33f6be45fb8eba2505b9342e1"
+          }
+        },
+        {
           "client_id": "129588440333-i7jpg5kdsbeleua7ip8mn01aa2k1f46r.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +37,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "129588440333-i7jpg5kdsbeleua7ip8mn01aa2k1f46r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2
