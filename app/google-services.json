@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "129588440333",
+    "firebase_url": "https://walkaboutit-d5df6.firebaseio.com",
+    "project_id": "walkaboutit-d5df6",
+    "storage_bucket": "walkaboutit-d5df6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:129588440333:android:bb98176ce705f9a5",
+        "android_client_info": {
+          "package_name": "com.fluidcoding.brian.walkaboutit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "129588440333-i7jpg5kdsbeleua7ip8mn01aa2k1f46r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk2TvTkAJb-XO5sgLGOIM6gt2spjJF4I4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

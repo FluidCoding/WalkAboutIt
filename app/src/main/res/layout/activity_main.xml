@@ -10,11 +10,58 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.fluidcoding.brian.walkaboutit.MainActivity">
 
-    <Button
-        android:text="Button"
+    <TextView
+        android:text="@string/app_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/btn_startWalking" />
+        android:id="@+id/appTitle" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_new_user_msg"
+            android:textSize="16sp"
+            android:checked="true"
+            android:layout_marginBottom="14dp"
+            android:id="@+id/checkNewUser" />
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName|textEmailAddress"
+            android:ems="10"
+            android:id="@+id/txtEmail"
+            android:gravity="center_vertical|center_horizontal"
+            android:hint="Email" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:ems="10"
+            android:id="@+id/txtPassword"
+            android:hint="Password"
+            android:gravity="center_vertical|center_horizontal" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:ems="10"
+            android:id="@+id/txtPasswordRepeat"
+            android:hint="Repeat Password"
+            android:gravity="center_vertical|center_horizontal"
+            android:visibility="gone"/>
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_login"
+            android:id="@+id/btnLogin"
+            android:onClick="login" />
+    </LinearLayout>
 </RelativeLayout>

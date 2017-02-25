@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">WalkAboutIt</string>
+    <string name="app_title">Walk About It!</string>
+    <string name="app_login">Login</string>
+    <string name="app_register">Register</string>
+    <string name="app_new_user_msg">Are you a new User?</string>
 </resources>
