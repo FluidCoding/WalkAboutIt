@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
                     // User is signed out
                     Log.d("SignOut", "onAuthStateChanged:signed_out");
                 }
-                // ...
             }
         };
 
@@ -126,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
                             }else{
-
+                                startActivity(mapAct);
                             }
                         }
                     });
@@ -165,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
     public class LoginOrRegisterChanged implements CompoundButton.OnCheckedChangeListener{
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            if(isChecked) {
+            if(!isChecked) {
                 txtRepeatPass.setVisibility(View.GONE);
                 btnSubmit.setText(R.string.app_login);
             }
