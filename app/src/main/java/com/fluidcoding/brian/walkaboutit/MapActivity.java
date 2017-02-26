@@ -32,6 +32,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -42,10 +49,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     Button btnStartWalk;
     Button btnStopWalk;
     Button btnViewStats;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private DatabaseReference mDb;
     private final String TAG = "MAPS";
     private GoogleMap mMap;
     private LocationManager locmn, locmg;
-    private MapView vMap;
+    //private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
     public void onProviderEnabled(String provider){}
 
@@ -80,6 +90,25 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mf.getMapAsync(this);
         Log.d(TAG, "Created Map Activity");
 
+        // Firebase
+        mAuth = FirebaseAuth.getInstance();
+        mDb = FirebaseDatabase.getInstance().getReference();
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // TODO: Push User back to login page.
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+            }
+        };
+
+        // MAPS API
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
@@ -90,14 +119,46 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         locmg = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locmn = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        // End Maps API
 
+        // Firebase Loading
+        GBP p = new GBP(0);
+        mDb.child("GPB").child(mAuth.getCurrentUser().getUid()).setValue(p);
+//        Log.d(TAG, mDb.child("GBP").child(mAuth.getCurrentUser().getUid());
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Get Post object and use the values to update the UI
+                GBP p = dataSnapshot.getValue(GBP.class);
+                Log.d(TAG, String.valueOf(p.getPoints()));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                // ...
+            }
+        };
+        mDb.addValueEventListener(postListener);
+        //
+
+        // UI Init/Events
+        btnStartWalk = (Button)findViewById(R.id.btnStart);
+//        btnStartWalk = (Button)findViewById(R.id.btnStats);
+        btnStartWalk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mDb.child("Philadelphia").
+            }
+        });
     }
 
     @Override
     protected void onStart() throws SecurityException {
         mGoogleApiClient.connect();
         super.onStart();
-
         locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 10, this);
         locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
     }

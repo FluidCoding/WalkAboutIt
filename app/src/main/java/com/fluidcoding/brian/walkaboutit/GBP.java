@@ -5,6 +5,13 @@ package com.fluidcoding.brian.walkaboutit;
  */
 
 public class GBP {
+
+    public GBP(){
+
+    }
+    public GBP(int points){
+        this.points = points;
+    }
     public int getPoints() {
         return points;
     }
