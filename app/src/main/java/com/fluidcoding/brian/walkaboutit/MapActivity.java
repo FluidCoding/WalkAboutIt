@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,6 +26,7 @@ import android.widget.SpinnerAdapter;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -33,6 +35,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -63,9 +66,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private LocationManager locmn, locmg;
     private ArrayList<Geotag> listOfGs;
-    private Location yourloc;
+    private Location yourloc, dest;
     private Marker mark;
     private Spinner spin;
+    private Geofence gf;
     //private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
     public void onProviderEnabled(String provider){}
@@ -84,7 +88,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mark = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location"));
 
 
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(16.0f));
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(19.0f));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
 
 
@@ -194,16 +198,38 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         // ---------------------------------------------------------------
         // END FIREBASE LOADS
-        // ---------------------------------------------------------------
-
+        // -----------------------------
         // UI Init/Events
         spin = (Spinner) findViewById(R.id.spinner);
         btnStartWalk = (Button)findViewById(R.id.btnStart);
-//        btnStartWalk = (Button)findViewById(R.id.btnStats);
+        btnStopWalk = (Button)findViewById(R.id.btnStop);
+
         btnStartWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: Add important code
+                // TODO: Get Selected Item If any
+
+                Geotag selectedTag = listOfGs.get(spin.getSelectedItemPosition());
+
+                mark = mMap.addMarker(new MarkerOptions().position(new LatLng(selectedTag.getLat(), selectedTag.getLng())).
+                        title(selectedTag.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
+
+                // TODO: Geofencing
+                dest = new Location(yourloc);
+                dest.setLatitude(selectedTag.getLat());
+                dest.setLongitude(selectedTag.getLng());
+                float distance = yourloc.distanceTo(dest);
+                int p_points = (int)distance / 100;
+                Snackbar.make(v, "Account Creation Error", Snackbar.LENGTH_INDEFINITE).show();
+
+                // TODO: Start Collecting Points
+            }
+        });
+
+        btnStopWalk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: Kill Geofencing
             }
         });
     }
@@ -230,7 +256,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "Maps Are Readyyyyy");
 
         mMap.animateCamera(CameraUpdateFactory.zoomTo(19.0f));
-
     }
 
 

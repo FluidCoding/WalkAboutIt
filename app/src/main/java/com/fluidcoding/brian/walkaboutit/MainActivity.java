@@ -14,6 +14,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference userFBRef;     // Firenase reference to user accounts
     private FirebaseAuth.AuthStateListener mAuthListener;
+
     Intent mapAct;
     final String TAG = "MainActivity";
     final String FIREBASE_URL = "https://walkaboutit-d5df6.firebaseio.com/";
