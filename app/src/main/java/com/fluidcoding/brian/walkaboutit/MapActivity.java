@@ -18,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -38,7 +39,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LocationListener
 {
 
-
+    Button btnStartWalk;
+    Button btnStopWalk;
+    Button btnViewStats;
     private final String TAG = "MAPS";
     private GoogleMap mMap;
     private LocationManager locmn, locmg;
