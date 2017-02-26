@@ -31,6 +31,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -39,6 +40,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -55,6 +58,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private final String TAG = "MAPS";
     private GoogleMap mMap;
     private LocationManager locmn, locmg;
+    private ArrayList<Geotag> listOfGs;
+    private Location yourloc;
+    private Marker mark;
+
     //private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
     public void onProviderEnabled(String provider){}
@@ -67,8 +74,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     public void onLocationChanged(Location location){
 
+        if(mark != null)
+            mMap.clear();
 
-        mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(),location.getLongitude())).title("Your Location"));
+        mark = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location"));
+
+
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(16.0f));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
 
 
@@ -89,7 +101,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         SupportMapFragment mf = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mf.getMapAsync(this);
         Log.d(TAG, "Created Map Activity");
-
+        listOfGs = new ArrayList<Geotag>();
         // Firebase
         mAuth = FirebaseAuth.getInstance();
         mDb = FirebaseDatabase.getInstance().getReference();
@@ -120,14 +132,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         locmg = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locmn = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         // End Maps API
-
+        // ---------------------------------------------------------------
         // Firebase Loading
+        // ---------------------------------------------------------------
         GBP p = new GBP(0);
         mDb.child("GPB").child(mAuth.getCurrentUser().getUid()).setValue(p);
 //        Log.d(TAG, mDb.child("GBP").child(mAuth.getCurrentUser().getUid());
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("FireBase", "firebase init");
                 // Get Post object and use the values to update the UI
                 GBP p = dataSnapshot.getValue(GBP.class);
                 Log.d(TAG, String.valueOf(p.getPoints()));
@@ -141,7 +155,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         };
         mDb.addValueEventListener(postListener);
-        //
+
+        ValueEventListener geoListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("FireBase", "firebase init");
+                // Get Post object and use the values to update the UI
+                for(DataSnapshot d : dataSnapshot.getChildren()){
+                    listOfGs.add(d.getValue(Geotag.class));
+                    Log.d(TAG, listOfGs.get(0).name);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                // ...
+            }
+        };
+        mDb.child("LL").child("Philadelphia").addValueEventListener(geoListener);
+
+        // ---------------------------------------------------------------
+        // END FIREBASE LOADS
+        // ---------------------------------------------------------------
 
         // UI Init/Events
         btnStartWalk = (Button)findViewById(R.id.btnStart);
@@ -150,7 +187,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
 
-                mDb.child("Philadelphia").
             }
         });
     }
@@ -177,7 +213,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "Maps Are Readyyyyy");
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
 
@@ -186,7 +222,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     @Override
-    @TargetApi(23)
     public void onConnected(@Nullable Bundle bundle) throws SecurityException{
 
     }
