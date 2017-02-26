@@ -25,6 +25,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -41,6 +42,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -52,17 +54,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener{
+        LocationListener
+{
 
     Button btnStartWalk;
     Button btnStopWalk;
-    Button btnViewStats;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private DatabaseReference mDb;
@@ -75,8 +79,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Spinner spin;
     private Geofence gf;
     static int p_points = 0;
+    private boolean map_state = false;
+    private boolean isWalking = false;
     //private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
+    float distance;
 
     public void onProviderEnabled(String provider) {
     }
@@ -91,14 +98,53 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if(mark != null)
         mark.remove();
 
-        mark = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location"));
+        if(map_state) {
+            mark = mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Your Location"));
 
 
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(19.0f));
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
-
+            mMap.moveCamera(CameraUpdateFactory.zoomTo(19.0f));
+            mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+        }
+        else{
+            return;
+        }
         btnStartWalk.setEnabled(true);
         yourloc = location;
+
+        if(isWalking) {
+            distance = yourloc.distanceTo(dest);
+            Log.d("Distance: ", ""+ distance);
+            //TODO: circle logic
+
+            p_points = (int) distance / 10 + 1;
+
+            if (distance < 10) {
+                //TODO: YOU WIN
+                Toast.makeText(this.getBaseContext(), "YOU WIN: " + p_points + " POINTS", Toast.LENGTH_LONG).show();
+
+                isWalking = false;
+                mMap.clear();
+                mDb.child("GBP").child(mAuth.getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        GBP g = new GBP(0);
+                        g = dataSnapshot.getValue(GBP.class);
+
+                        if(g==null){ mDb.child("GBP").child(mAuth.getCurrentUser().getUid()).setValue(new GBP(p_points));}
+                        else{
+                            g.setPoints(g.getPoints()+p_points);
+                            mDb.child("GBP").child(mAuth.getCurrentUser().getUid()).setValue(g);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
+
+        }
     }
 
     @Override
@@ -106,18 +152,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     }
 
-    PendingIntent pIntent;
 
-//    private PendingIntent getGeofencePendingIntent() {
-//        // Reuse the PendingIntent if we already have it.
-//        if (mGeofencePendingIntent != null) {
-//            return mGeofencePendingIntent;
-//        }
-//        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
-//        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-//        // addGeofences() and removeGeofences().
-//        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) throws SecurityException {
@@ -126,18 +163,33 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
 
-        Intent intent = new Intent(this, LocationService.class);
-        pIntent = PendingIntent.getService(this, 0, intent, 0);
-
-
         setSupportActionBar(toolbar);
         SupportMapFragment mf = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mf.getMapAsync(this);
         Log.d(TAG, "Created Map Activity");
-        listOfGs = new ArrayList<Geotag>();
-        // Firebase
+
         mAuth = FirebaseAuth.getInstance();
         mDb = FirebaseDatabase.getInstance().getReference();
+
+
+
+
+        mDb.child("GBP").child(mAuth.getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GBP gs = new GBP(0);
+                gs = dataSnapshot.getValue(GBP.class);
+
+                if(gs!=null){Toast.makeText(getBaseContext(), "Welcome back, you have " + gs.getPoints() + " points", Toast.LENGTH_LONG).show(); }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        listOfGs = new ArrayList<Geotag>();
+        // Firebase
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -164,13 +216,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         locmg = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locmn = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        // End Maps API
-        // ---------------------------------------------------------------
-        // Firebase Loading
-        // ---------------------------------------------------------------
-        GBP p = new GBP(0);
-        mDb.child("GPB").child(mAuth.getCurrentUser().getUid()).setValue(p);
-//        Log.d(TAG, mDb.child("GBP").child(mAuth.getCurrentUser().getUid());
+
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -232,91 +278,67 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 // TODO: Get Selected Item If any
-
+                init_location(yourloc);
+                isWalking = true;
+                Log.d("isWalking: ", "true");
                 Geotag selectedTag = listOfGs.get(spin.getSelectedItemPosition());
-
-                mark2 = mMap.addMarker(new MarkerOptions().position(new LatLng(selectedTag.getLat(), selectedTag.getLng())).
+                LatLng temp = new LatLng(selectedTag.getLat(), selectedTag.getLng());
+                mark2 = mMap.addMarker(new MarkerOptions().position(temp).
                         title(selectedTag.getName()).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
+
+                mMap.addCircle(new CircleOptions().center(temp).radius(10.0));
 
                 // TODO: Points
                 dest = new Location("");
                 dest.setLatitude(selectedTag.getLat());
                 dest.setLongitude(selectedTag.getLng());
-                float distance = yourloc.distanceTo(dest);
+                distance = yourloc.distanceTo(dest);
+                //TODO: circle logic
 
                 p_points = (int) distance / 10 + 1;
-                //Snackbar.make(v, "Possible Points: " + p_points, Snackbar.LENGTH_LONG).show();
-                Snackbar.make(v, "Distance to goal: " + distance, Snackbar.LENGTH_LONG).show();
-
-                Geofence.Builder buildFence = new Geofence.Builder();
-                Geofence mGeo = buildFence.setRequestId("1")
-                        .setCircularRegion(dest.getLatitude(), dest.getLongitude(), 100.0f)
-                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                        .setExpirationDuration(10000)
-                        .build();
-
-
-                ArrayList<Geofence> geofencingList = new ArrayList<Geofence>();
-                geofencingList.add(mGeo);
-                GoogleApiClient g;
-
-
-                try {
-                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-                        return;
-                    }
-                    LocationServices.GeofencingApi.addGeofences(
-                            mGoogleApiClient,
-                            getGeofencingRequest(geofencingList),
-                            pIntent
-                    );
-            }catch(Exception e){
-                    Log.d(TAG, e.toString());
-                }
-
+                Snackbar.make(v, "Possible Points: " + p_points, Snackbar.LENGTH_SHORT).show();
 
 
                 // TODO: Start Collecting Points
             }
         });
 
-        btnStopWalk.setOnClickListener(new View.OnClickListener() {
+        btnStopWalk.setOnClickListener (new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v){
                 // TODO: Kill Geofencing
+                init_location();
             }
-        });
+        });}
+        void init_location() throws   SecurityException
+        {
+
+        Location tmpl = yourloc;
+        if (tmpl == null){
+            tmpl = new Location("");
+            tmpl.setLongitude(0.0);
+            tmpl.setLatitude(0.0);
+        }
+            init_location(tmpl);
+        }
+    void init_location(Location l) throws   SecurityException{
+        if(l==null)
+            init_location();
+        isWalking = false;
+        mMap.clear();
+        onLocationChanged(l);
     }
+
+
 
 
     @Override
     protected void onStart() throws SecurityException {
         mGoogleApiClient.connect();
         super.onStart();
-        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 5, this);
-        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 5, this);
-    }
+        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 3, this);
+        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 3, this);
 
-    private GeofencingRequest getGeofencingRequest(ArrayList<Geofence> geofenceList) {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-
-        // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
-        // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
-        // is already inside that geofence.
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-
-        // Add the geofences to be monitored by geofencing service.
-        builder.addGeofences(geofenceList);
-
-        // Return a GeofencingRequest.
-        return builder.build();
     }
 
     @Override
@@ -330,8 +352,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        init_location();
         Log.d(TAG, "Maps Are Readyyyyy");
-
+        map_state = true;
         mMap.animateCamera(CameraUpdateFactory.zoomTo(19.0f));
     }
 

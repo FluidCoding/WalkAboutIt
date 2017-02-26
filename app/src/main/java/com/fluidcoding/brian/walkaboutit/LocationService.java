@@ -168,7 +168,6 @@ public class LocationService extends IntentService {
         // Get an instance of the Notification manager
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
         // Issue the notification
         mNotificationManager.notify(0, builder.build());
     }
