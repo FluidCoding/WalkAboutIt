@@ -1,8 +1,11 @@
 package com.fluidcoding.brian.walkaboutit;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,16 +34,38 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener
+{
 
 
     private final String TAG = "MAPS";
     private GoogleMap mMap;
+    private LocationManager locmn, locmg;
     private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
+    public void onProviderEnabled(String provider){}
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onProviderDisabled(String provider) {
+
+    }
+
+
+    public void onLocationChanged(Location location){
+        mMap.clear();
+        mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(),location.getLongitude())).title("Your Location"));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) throws SecurityException{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -57,16 +82,24 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .build();
         }
 
+        locmg = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locmn = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart() throws SecurityException {
         mGoogleApiClient.connect();
         super.onStart();
+
+        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 10, this);
+        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
     }
 
     @Override
-    protected void onStop() {
+    protected void onStop() throws SecurityException {
+        locmn.removeUpdates(this);
+        locmg.removeUpdates(this);
         mGoogleApiClient.disconnect();
         super.onStop();
     }
@@ -79,22 +112,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location l = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if(l != null) {
 
-            mMap.addMarker(new MarkerOptions().position(new LatLng(l.getLatitude(), l.getLongitude())));
-            mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(l.getLatitude(), l.getLongitude())));
-        }
 
     }
 
