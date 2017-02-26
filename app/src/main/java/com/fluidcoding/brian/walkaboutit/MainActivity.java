@@ -20,6 +20,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Login For Fire
@@ -42,10 +43,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // Saved Data
         loginAuth = getSharedPreferences("auth", 0);
         uName=loginAuth.getString("uName","nologin");
+
+
+
 
         // Intents
         mapAct = new Intent(this, MapActivity.class);
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 if (user != null) {
                     // User is signed in
                     Log.d("SignIn", "onAuthStateChanged:signed_in:" + user.getUid());
+                    startActivity(mapAct);
                 } else {
                     // User is signed out
                     Log.d("SignOut", "onAuthStateChanged:signed_out");

@@ -15,7 +15,7 @@
         android:id="@+id/map"
         android:layout_width="wrap_content"
         android:layout_height="400dp"
-        android:name="com.google.android.gms.maps.MapFragment"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_weight="3"/>
 
     <EditText android:id="@+id/EditTest"
