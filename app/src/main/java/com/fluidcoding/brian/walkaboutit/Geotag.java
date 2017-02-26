@@ -8,6 +8,14 @@ public class Geotag {
     public double lat, lng;
     public String name;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Geotag(double lat, double lng, String name) {
         this.lat = lat;
         this.lng = lng;

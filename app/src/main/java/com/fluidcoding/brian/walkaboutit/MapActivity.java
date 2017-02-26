@@ -18,7 +18,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -41,11 +44,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
-<<<<<<< HEAD
-=======
-import java.util.List;
->>>>>>> a6a9fde8d0bd54cfb1fa050b4f57d24959882cee
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
@@ -65,7 +65,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private ArrayList<Geotag> listOfGs;
     private Location yourloc;
     private Marker mark;
-
+    private Spinner spin;
     //private MapView vMap;
     GoogleApiClient mGoogleApiClient = null;
     public void onProviderEnabled(String provider){}
@@ -169,6 +169,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     listOfGs.add(d.getValue(Geotag.class));
                     Log.d(TAG, listOfGs.get(0).name);
                 }
+
+                ArrayList<String> strs = new ArrayList<String>();
+                strs.add("All");
+                if(mMap != null)
+                {
+                    for(Geotag gg:listOfGs)
+                    strs.add(gg.getName());
+
+                }
+                ArrayAdapter<String> stradp = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_dropdown_item, strs);
+                spin.setAdapter(stradp);
+
             }
 
             @Override
@@ -185,14 +197,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // ---------------------------------------------------------------
 
         // UI Init/Events
+        spin = (Spinner) findViewById(R.id.spinner);
         btnStartWalk = (Button)findViewById(R.id.btnStart);
 //        btnStartWalk = (Button)findViewById(R.id.btnStats);
         btnStartWalk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
->>>>>>> a6a9fde8d0bd54cfb1fa050b4f57d24959882cee
+                //TODO: Add important code
             }
         });
     }
@@ -201,8 +212,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onStart() throws SecurityException {
         mGoogleApiClient.connect();
         super.onStart();
-        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 10, this);
-        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
+        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 5, this);
+        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 5, this);
     }
 
     @Override
@@ -217,11 +228,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         Log.d(TAG, "Maps Are Readyyyyy");
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(19.0f));
 
     }
 
