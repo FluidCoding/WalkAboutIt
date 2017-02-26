@@ -53,9 +53,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     public void onLocationChanged(Location location){
-        mMap.clear();
+
+
         mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(),location.getLongitude())).title("Your Location"));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+
+
     }
 
     @Override
@@ -112,7 +115,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
 
     }
 
