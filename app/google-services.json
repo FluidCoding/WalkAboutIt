@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "129588440333-b18c54gkj8o58scivu6nccj0orlbbj2u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fluidcoding.brian.walkaboutit",
+            "certificate_hash": "0c6e25609f000351a1cf5c401de694800526714c"
+          }
+        },
+        {
           "client_id": "129588440333-g71f7d0sgto64rmdl35o8h3b5lf5vhq3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

@@ -5,16 +5,8 @@ package com.fluidcoding.brian.walkaboutit;
  */
 
 public class Geotag {
-    public double lat, lng;
-    public String name;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private double lat, lng;
+    private String name;
 
     public Geotag(double lat, double lng, String name) {
         this.lat = lat;
@@ -23,24 +15,21 @@ public class Geotag {
     }
 
     public Geotag(){}
-
-
-
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
     public double getLng() {
         return lng;
     }
-
     public void setLng(double lng) {
         this.lng = lng;
     }
-
-
-
-
     public double getLat() {
         return lat;
     }
-
     public void setLat(double lat) {
         this.lat = lat;
     }

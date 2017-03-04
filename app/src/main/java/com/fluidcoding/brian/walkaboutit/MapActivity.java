@@ -1,5 +1,6 @@
 package com.fluidcoding.brian.walkaboutit;
 
+import android.*;
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -56,27 +58,31 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
+import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener
+public class MapActivity extends AppCompatActivity implements
+OnMapReadyCallback,
+GoogleApiClient.ConnectionCallbacks,
+GoogleApiClient.OnConnectionFailedListener,
+LocationListener
 {
-
-    Button btnStartWalk;
-    Button btnStopWalk;
+    private final String TAG = "MapActivity";
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private DatabaseReference mDb;
-    private final String TAG = "MAPS";
-    private GoogleMap mMap;
     private LocationManager locmn, locmg;
     private ArrayList<Geotag> listOfGs;
     private Location yourloc, dest;
     private Marker mark, mark2;
+
+    // UI Elements
+    private GoogleMap mMap;
+    private Button btnStartWalk;
+    private Button btnStopWalk;
     private Spinner spin;
+
     private Geofence gf;
     static int p_points = 0;
     private boolean map_state = false;
@@ -161,25 +167,21 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-
         setSupportActionBar(toolbar);
+
         SupportMapFragment mf = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mf.getMapAsync(this);
-        Log.d(TAG, "Created Map Activity");
 
+        listOfGs = new ArrayList<Geotag>();
+
+        // Begin Firebase
         mAuth = FirebaseAuth.getInstance();
         mDb = FirebaseDatabase.getInstance().getReference();
-
-
-
-
         mDb.child("GBP").child(mAuth.getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GBP gs = new GBP(0);
                 gs = dataSnapshot.getValue(GBP.class);
-
                 if(gs!=null){Toast.makeText(getBaseContext(), "Welcome back, you have " + gs.getPoints() + " points", Toast.LENGTH_LONG).show(); }
             }
 
@@ -188,12 +190,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
             }
         });
-        listOfGs = new ArrayList<Geotag>();
-        // Firebase
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+            public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
@@ -204,8 +204,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 }
             }
         };
+        // End Firebase
 
-        // MAPS API
+        // Begin MAPS API
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
@@ -217,10 +218,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         locmg = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locmn = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
+        mGoogleApiClient.connect();
+        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 3, this);
+        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 3, this);
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("FireBase", "firebase init");
                 // Get Post object and use the values to update the UI
                 GBP p = dataSnapshot.getValue(GBP.class);
                 Log.d(TAG, String.valueOf(p.getPoints()));
@@ -242,7 +245,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 // Get Post object and use the values to update the UI
                 for (DataSnapshot d : dataSnapshot.getChildren()) {
                     listOfGs.add(d.getValue(Geotag.class));
-                    Log.d(TAG, listOfGs.get(0).name);
                 }
 
                 ArrayList<String> strs = new ArrayList<String>();
@@ -297,11 +299,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
                 p_points = (int) distance / 10 + 1;
                 Snackbar.make(v, "Possible Points: " + p_points, Snackbar.LENGTH_SHORT).show();
-
-
                 // TODO: Start Collecting Points
             }
         });
+
 
         btnStopWalk.setOnClickListener (new View.OnClickListener() {
             @Override
@@ -330,14 +331,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
 
-
-
     @Override
     protected void onStart() throws SecurityException {
-        mGoogleApiClient.connect();
+        int permissionCheck = ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION);
+        int permissionCheck2 = ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (Build.VERSION.SDK_INT > 23 ){//&& permissionCheck == -1) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                    123);
+        }
         super.onStart();
-        locmn.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 3, this);
-        locmg.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 3, this);
+
 
     }
 
@@ -353,7 +358,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         init_location();
-        Log.d(TAG, "Maps Are Readyyyyy");
         map_state = true;
         mMap.animateCamera(CameraUpdateFactory.zoomTo(19.0f));
     }
@@ -361,7 +365,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) throws SecurityException{
+    public void onConnected( Bundle bundle) throws SecurityException{
 
     }
 
@@ -371,7 +375,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    public void onConnectionFailed( ConnectionResult connectionResult) {
 
     }
 }

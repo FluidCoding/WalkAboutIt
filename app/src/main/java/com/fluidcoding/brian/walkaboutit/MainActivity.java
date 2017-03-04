@@ -1,11 +1,12 @@
 package com.fluidcoding.brian.walkaboutit;
 
+import android.Manifest;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,52 +15,51 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.gms.location.Geofence;
+import com.google.android.gms.instantapps.PackageManagerWrapper;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Login For Fire
  */
 public class MainActivity extends AppCompatActivity {
+    final String TAG = "MainActivity";
+
+    // UI Elements
     private Button btnSubmit;       // Login/Register
-    SharedPreferences loginAuth;    // login token/name valid for 24 hours
     private CheckBox checkNewUser;  // Checked for New User
     private EditText txtRepeatPass; // Repeat Password Input
     private EditText txtPass;       // Password Input
     private EditText txtEmail;      // Email Input
-    private String uName;           // Username for cache
+
+    // Firebase
+    final String FIREBASE_URL = "https://walkaboutit-d5df6.firebaseio.com/";
     private FirebaseAuth mAuth;
     private DatabaseReference userFBRef;     // Firenase reference to user accounts
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    Intent mapAct;
-    final String TAG = "MainActivity";
-    final String FIREBASE_URL = "https://walkaboutit-d5df6.firebaseio.com/";
+    private int formMASK;
+    private Intent mapAct;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Saved Data
-        loginAuth = getSharedPreferences("auth", 0);
-        uName=loginAuth.getString("uName","nologin");
 
+        // Hook all UI Components
+        initUI();
 
-
-
-        // Intents
         mapAct = new Intent(this, MapActivity.class);
 
-        // Firebase setup
+        // Firebase Authentication
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+            public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
@@ -71,11 +71,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
-        initFireBase();
-        initUI();
     }
-
 
     @Override
     public void onStart() {
@@ -90,19 +86,26 @@ public class MainActivity extends AppCompatActivity {
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
+
     /**
      * Attempt to log user in or register
-     * Show snackbar on error
+     * Show relevant Snackbar on error
      * @param v the view in static context that triggered this call
      */
     public void loginOrRegister(final View v){
-        if(!validForm()) return;
+        String email = txtEmail.getText().toString();
+        String pass = txtPass.getText().toString();
+        String pass2 = txtRepeatPass.getText().toString();
+        final boolean isNewAccount = checkNewUser.isChecked();
+
+        if(!validateForm(email, pass, pass2, isNewAccount)) return;
+
         // Create a New Account
-        if(checkNewUser.isChecked()){
-            mAuth.createUserWithEmailAndPassword(txtEmail.getText().toString(), txtPass.getText().toString())
+        if(isNewAccount){
+            mAuth.createUserWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
+                    public void onComplete( Task<AuthResult> task) {
                         Log.d("Status", "createUserWithEmail:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
@@ -116,11 +119,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-        }else{
-            mAuth.signInWithEmailAndPassword(txtEmail.getText().toString(), txtPass.getText().toString())
+        }else{// Login
+            mAuth.signInWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
+                        public void onComplete( Task<AuthResult> task) {
                             Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
 
                             // If sign in fails, display a message to the user. If sign in succeeds
@@ -138,24 +141,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*
-        TODO: Basic form validation
+    /**
+     *
+     * @param email Email Field Entry
+     * @param pass  Password text
+     * @param pass2 Password Repeat text(if needed)
+     * @param newAcc checked state of New Account
+     * @return true if form is ready to submit
      */
-    public boolean validForm(){
-        return true;
+    public boolean validateForm(String email, String pass, String pass2, boolean newAcc){
+        formMASK = 0;
+        if(!email.matches(".+@.+\\..+"))    formMASK = formMASK | 1;
+        if(pass.length()<6)                 formMASK = formMASK | 2;
+        if(newAcc & (!pass2.equals(pass)))  formMASK = formMASK | 4;
+        if(formMASK == 0)                   return true;
+        else                                return false;
     }
-    public void initUI(){
 
-        // Hook Components
+    /**
+     * Just hooking up ui elements here...that is all
+     * TODO: Hook onChange for all elements to toggle submit button if valid.
+     */
+    public void initUI(){
+        // Hook components from the view
         checkNewUser = (CheckBox)findViewById(R.id.checkNewUser);
-        checkNewUser.setOnCheckedChangeListener(new LoginOrRegisterChanged());
         txtEmail = (EditText)findViewById(R.id.txtEmail);
         txtPass = (EditText)findViewById(R.id.txtPassword);
         txtRepeatPass = (EditText)findViewById(R.id.txtPasswordRepeat);
         btnSubmit = (Button)findViewById(R.id.btnLogin);
-        // Remember username by default
-        if(!uName.equals("nologin"))    txtEmail.setText(uName);
 
+        // Event Hooks
+        checkNewUser.setOnCheckedChangeListener(new LoginOrRegisterChanged());
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -179,9 +195,6 @@ public class MainActivity extends AppCompatActivity {
                 btnSubmit.setText(R.string.app_register);
             }
         }
-    }
-
-    public void initFireBase(){
     }
 
 }
